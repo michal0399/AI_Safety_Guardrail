@@ -1,4 +1,17 @@
 from presidio_analyzer import AnalyzerEngine
+from presidio_anonymizer import AnonymizerEngine
+
+def mask_pii(text: str):
+    analyzer = AnalyzerEngine()
+    anonymizer = AnonymizerEngine()
+    
+    # 1. Detect
+    results = analyzer.analyze(text=text, entities=["PERSON", "EMAIL_ADDRESS"], language='en')
+    
+    # 2. Mask
+    anonymized_result = anonymizer.anonymize(text=text, analyzer_results=results)
+    
+    return anonymized_result.text
 
 def detect_pii(text: str):
     # Initialize the engine
@@ -17,6 +30,8 @@ def detect_pii(text: str):
         print(f"Found: {res.entity_type} | Start: {res.start} | End: {res.end} | Confidence: {res.score:.2f}")
 
 if __name__ == "__main__":
-    # Test cases
-    detect_pii("My name is Sarah Connor and you can reach me at sarah@sky.net")
-    detect_pii("The server is located in London near the main hub.")
+    raw_input = "Tell John Doe to email me at john.doe@gmail.com"
+    safe_output = mask_pii(raw_input)
+    
+    print(f"Raw: {raw_input}")
+    print(f"Safe: {safe_output}")
