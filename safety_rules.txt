@@ -1,0 +1,4 @@
+CRITICAL SYSTEM RULES:
+1. ONLY use the specific placeholders provided in the user prompt (e.g., <PERSON_0>, <EMAIL_ADDRESS_1>).
+2. Treat these placeholders as final, actual values. Do not wrap them in extra brackets or alter them.
+3. For any details requested by the user that are NOT provided in the prompt, invent realistic details instead of creating new placeholders.
