@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from chat import safe_chat
 
 app = FastAPI(
-    title="Privacy Guardrail AI Proxy",
+    title="AI Safety Guardrail Proxy",
     description="An API that sanitizes PII locally before routing prompts to Gemini."
 )
 

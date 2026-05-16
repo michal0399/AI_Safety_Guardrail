@@ -14,3 +14,8 @@ dependencies = [
     "spacy>=3.8.14",
     "uvicorn>=0.47.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]
