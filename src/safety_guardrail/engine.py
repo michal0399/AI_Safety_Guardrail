@@ -9,8 +9,9 @@ class SafetyGuardrail:
         self.mapping_vault = {}
 
     def protect(self, text: str):
-        # 1. Analyze
-        results = self.analyzer.analyze(text=text, entities=["PERSON", "EMAIL_ADDRESS"], language='en')
+        # 1. Analyze - detect comprehensive PII types
+        entities = ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "LOCATION", "DATE_TIME", "CREDIT_CARD", "URL", "IP_ADDRESS"]
+        results = self.analyzer.analyze(text=text, entities=entities, language='en')
         
         # 2. Define custom masking to create unique IDs
         operators = {

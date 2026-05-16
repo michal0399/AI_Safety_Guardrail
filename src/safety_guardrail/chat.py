@@ -37,16 +37,22 @@ def safe_chat(user_prompt: str, task_instruction: str = "You are a helpful assis
         full_system_instruction,
         f"User Prompt: {masked_prompt}"
     ])
-
     ai_raw_response = response.text
     print(f"[INTERNAL] AI Raw Response: {ai_raw_response}")
 
     # 4. Reveal PII locally
     final_output = guard.reveal(ai_raw_response)
-    return final_output
+    
+    # Return everything for API visibility
+    return {
+        "masked_prompt": masked_prompt,
+        "ai_raw_response": ai_raw_response,
+        "final_output": final_output
+    }
 
 if __name__ == "__main__":
     prompt = "My name is John Wick and my email is boogeyman@continental.com. Can you write a professional bio for me?"
     task = "You are an expert executive resume writer and biographer."
     
-    print(safe_chat(prompt, task_instruction=task))
+    result = safe_chat(prompt, task_instruction=task)
+    print(f"\nFINAL OUTPUT:\n{result['final_output']}")
