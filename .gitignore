@@ -11,3 +11,10 @@ wheels/
 
 # Environment
 .env
+.github
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+*.log

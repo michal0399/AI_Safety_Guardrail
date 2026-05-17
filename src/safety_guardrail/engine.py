@@ -9,6 +9,20 @@ class SafetyGuardrail:
         self.mapping_vault = {}
 
     def protect(self, text: str):
+        # Input validation and sanitization
+        if text is None:
+            raise TypeError("Input text cannot be None. Expected a string.")
+        
+        if not isinstance(text, str):
+            raise TypeError(f"Input text must be a string, got {type(text).__name__}")
+        
+        # Sanitize: strip leading/trailing whitespace
+        text = text.strip()
+        
+        # Handle empty strings
+        if not text:
+            return text
+        
         # 1. Analyze - detect comprehensive PII types
         entities = ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "LOCATION", "DATE_TIME", "CREDIT_CARD", "URL", "IP_ADDRESS"]
         results = self.analyzer.analyze(text=text, entities=entities, language='en')
@@ -33,6 +47,13 @@ class SafetyGuardrail:
         return anonymized_text
 
     def reveal(self, AI_response: str):
+        # Input validation
+        if AI_response is None:
+            raise TypeError("AI response cannot be None. Expected a string.")
+        
+        if not isinstance(AI_response, str):
+            raise TypeError(f"AI response must be a string, got {type(AI_response).__name__}")
+        
         # Swap placeholders back to real data
         revealed_text = AI_response
         for placeholder, original_val in self.mapping_vault.items():

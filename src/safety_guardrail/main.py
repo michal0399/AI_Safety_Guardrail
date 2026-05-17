@@ -4,7 +4,7 @@ from safety_guardrail.chat import safe_chat
 
 app = FastAPI(
     title="AI Safety Guardrail Proxy",
-    description="An API that sanitizes PII locally before routing prompts to Gemini."
+    description="An API that sanitizes PII locally before routing prompts to an LLM."
 )
 
 class ChatRequest(BaseModel):
