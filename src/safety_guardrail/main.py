@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from chat import safe_chat
+from safety_guardrail.chat import safe_chat
 
 app = FastAPI(
     title="AI Safety Guardrail Proxy",
@@ -16,6 +16,11 @@ class ChatResponse(BaseModel):
     masked_prompt: str
     ai_raw_response: str
     final_output: str
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker container."""
+    return {"status": "healthy", "service": "Safety Guardrail AI Proxy"}
 
 @app.post("/api/v1/chat", response_model=ChatResponse)
 async def handle_chat(payload: ChatRequest):
