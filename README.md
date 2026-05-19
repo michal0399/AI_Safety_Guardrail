@@ -7,17 +7,20 @@ Solution: This project introduces a Zero-Trust Local Boundary. Because PII maski
 How this works:
 
 ```mermaid
-graph TD
-    A[Client Application] -->|1. Sends Raw Prompt: 'I am Jack Smith...'| B(FastAPI Middleware)
-    B -->|2. Local Presidio Scrubbing & Token Mapping Vault| B
-    B -->|3. Sends Masked Prompt: 'I am PERSON_0...'| C[LiteLLM Routing Layer]
-    C -->|4. Dispatches to API| D[LLM Provider]
-    D -->|5. Returns Masked Response: 'Hello PERSON_0...'| B
-    B -->|6. Local Rehydration via Token Mapping Vault| B
-    B -->|7. Returns Real Response: 'Hello Jack Smith...'| A
+sequenceDiagram
+    autonumber
+    actor Client as Client Application
+    participant MW as FastAPI Middleware
+    participant LLM as LiteLLM Routing Layer
+    participant Provider as LLM Provider
 
-    style B fill:#f9f,stroke:#333,stroke-width:2px
-    style C fill:#bbf,stroke:#333,stroke-width:1px
+    Client->>MW: Sends Raw Prompt ("I am Jack Smith...")
+    Note over MW: Local Presidio Scrubbing &<br/>Token Mapping Vault Created
+    MW->>LLM: Sends Masked Prompt ("I am <PERSON_0>...")
+    LLM->>Provider: Dispatches to Gemini, OpenAI, or Anthropic API
+    Provider-->>MW: Returns Masked Response ("Hello <PERSON_0>...")
+    Note over MW: Local Rehydration via<br/>Token Mapping Vault
+    MW-->>Client: Returns Real Response ("Hello Jack Smith...")
 
 Test-Driven Development with:
 
