@@ -6,6 +6,7 @@ Solution: This project introduces a Zero-Trust Local Boundary. Because PII maski
 
 How this works:
 
+```markdown
 ```mermaid
 sequenceDiagram
     autonumber
@@ -17,10 +18,11 @@ sequenceDiagram
     Client->>MW: Sends Raw Prompt ("I am Jack Smith...")
     Note over MW: Local Presidio Scrubbing &<br/>Token Mapping Vault Created
     MW->>LLM: Sends Masked Prompt ("I am <PERSON_0>...")
-    LLM->>Provider: Dispatches to Gemini, OpenAI, or Anthropic API
+    LLM->>Provider: Dispatches to API
     Provider-->>MW: Returns Masked Response ("Hello <PERSON_0>...")
     Note over MW: Local Rehydration via<br/>Token Mapping Vault
     MW-->>Client: Returns Real Response ("Hello Jack Smith...")
+
 
 Test-Driven Development with:
 
