@@ -6,7 +6,6 @@ Solution: This project introduces a Zero-Trust Local Boundary. Because PII maski
 
 How this works:
 
-```markdown
 ```mermaid
 sequenceDiagram
     autonumber
