@@ -4,25 +4,6 @@ The Core Problem with LLM Gateways: Tools like LiteLLM consolidate all API keys 
 
 Solution: This project introduces a Zero-Trust Local Boundary. Because PII masking and token vaulting happen locally before any third-party routing engine touches the string, even a completely backdoored proxy cannot leak real user data.
 
-How this works:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as Client Application
-    participant MW as FastAPI Middleware
-    participant LLM as LiteLLM Routing Layer
-    participant Provider as LLM Provider
-
-    Client->>MW: Sends Raw Prompt ("I am Jack Smith...")
-    Note over MW: Local Presidio Scrubbing &<br/>Token Mapping Vault Created
-    MW->>LLM: Sends Masked Prompt ("I am <PERSON_0>...")
-    LLM->>Provider: Dispatches to API
-    Provider-->>MW: Returns Masked Response ("Hello <PERSON_0>...")
-    Note over MW: Local Rehydration via<br/>Token Mapping Vault
-    MW-->>Client: Returns Real Response ("Hello Jack Smith...")
-
-
 Test-Driven Development with:
 
 📊 AI-as-a-Judge Evaluation (DeepEval) to guarantee the local masking engine completely eliminates PII leakage without degrading the LLM's performance, the system is benchmarked using DeepEval (G-Eval) with a gemini-2.5-flash evaluation judge.
