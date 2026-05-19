@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: local
+    hooks:
+      - id: bandit
+        name: bandit
+        entry: powershell -Command "$env:PYTHONUTF8=1; uv run bandit"
+        args: ["-l", "-i", "--exclude", "tests/"]
+        language: system
+        types: [python]
+
+      - id: safety
+        name: safety
+        entry: uv run safety check
+        language: system
+        pass_filenames: false

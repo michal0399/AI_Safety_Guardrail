@@ -33,7 +33,7 @@ def test_chat_endpoint_structure(api_client):
         },
         headers={"Authorization": "Bearer fake_key"}  # May not be needed for structure test
     )
-    
+
     # Should return either success or 500 (API key issue), not 404
     assert response.status_code != 404
 
@@ -44,6 +44,6 @@ def test_chat_endpoint_response_schema(api_client):
     # - ai_raw_response
     # - final_output
     expected_fields = ["masked_prompt", "ai_raw_response", "final_output"]
-    
+
     # This test verifies the schema expectation
     assert all(isinstance(field, str) for field in expected_fields)

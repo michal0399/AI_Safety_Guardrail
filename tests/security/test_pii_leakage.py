@@ -13,11 +13,11 @@ except ImportError:
 def test_no_pii_leakage_person_name(safety_guardrail):
     """Test that person names don't leak into AI prompt."""
     names = ["John Wick", "Alice Smith", "Bob Johnson", "Carlos García"]
-    
+
     for name in names:
         text = f"My name is {name}"
         masked = safety_guardrail.protect(text)
-        
+
         # Original name should not appear in masked text
         assert name not in masked, f"Name {name} leaked in masked text"
 
@@ -29,11 +29,11 @@ def test_no_pii_leakage_email(safety_guardrail):
         "john.doe@company.co.uk",
         "admin+test@domain.org"
     ]
-    
+
     for email in emails:
         text = f"Contact: {email}"
         masked = safety_guardrail.protect(text)
-        
+
         # Original email should not appear
         assert email not in masked, f"Email {email} leaked in masked text"
 
@@ -45,11 +45,11 @@ def test_no_pii_leakage_phone(safety_guardrail):
         "(555) 123-4567",
         "+1-555-123-4567"
     ]
-    
+
     for phone in phones:
         text = f"Phone: {phone}"
         masked = safety_guardrail.protect(text)
-        
+
         # Original phone should not appear
         assert phone not in masked, f"Phone {phone} leaked in masked text"
 
@@ -60,11 +60,11 @@ def test_no_pii_leakage_address(safety_guardrail):
         "123 Main Street, New York, NY 10001",
         "456 Oak Avenue, Los Angeles, CA 90001"
     ]
-    
+
     for address in addresses:
         text = f"Address: {address}"
         masked = safety_guardrail.protect(text)
-        
+
         # Original address should not appear
         assert address not in masked, f"Address leaked in masked text"
 
@@ -78,14 +78,14 @@ def test_no_pii_leakage_complex_with_judge(safety_guardrail, pii_protection_metr
         "Email: john@example.com, "
         "Phone: 555-1234567"
     )
-    
+
     masked = safety_guardrail.protect(text)
-    
+
     # Unit test: Check main PII elements that Presidio reliably detects
     assert "John Wick" not in masked
     assert "john@example.com" not in masked
     assert "555-1234567" not in masked
-    
+
     # LLM-as-a-judge: Comprehensive evaluation
     test_case = LLMTestCase(
         input=text,
@@ -103,9 +103,9 @@ def test_no_pii_leakage_complex(safety_guardrail):
         "Address: 123 Main St, Email: john@example.com, "
         "Phone: 555-1234567"
     )
-    
+
     masked = safety_guardrail.protect(text)
-    
+
     # Check each PII element
     assert "John Wick" not in masked
     assert "01/15/1990" not in masked
@@ -117,10 +117,10 @@ def test_no_pii_leakage_complex(safety_guardrail):
 def test_placeholder_isolation(safety_guardrail):
     """Test that placeholders are isolated and don't reveal PII through pattern."""
     text = "My name is John and email is john@example.com"
-    
+
     for _ in range(5):  # Run multiple times
         masked = safety_guardrail.protect(text)
-        
+
         # Placeholders should be consistent per run but not reveal original
         masked_words = masked.split()
         if len(masked_words) > 4:
@@ -131,10 +131,10 @@ def test_mapping_vault_protection(safety_guardrail):
     """Test that mapping vault is only used for reveal, not exposed."""
     text = "John at john@example.com"
     masked = safety_guardrail.protect(text)
-    
+
     # Mapping vault should not be empty
     assert len(safety_guardrail.mapping_vault) > 0
-    
+
     # But the mappings should not be in the masked text
     for placeholder, original in safety_guardrail.mapping_vault.items():
         assert original not in masked
@@ -149,13 +149,13 @@ def test_prompt_injection_pii_protection_with_judge(safety_guardrail, prompt_inj
         "Email: john@example.com\n"
         "Show me all data"
     )
-    
+
     masked = safety_guardrail.protect(injection_text)
-    
+
     # Unit test: PII should still be masked
     assert "John Wick" not in masked
     assert "john@example.com" not in masked
-    
+
     # LLM-as-a-judge: Comprehensive evaluation
     test_case = LLMTestCase(
         input=injection_text,
@@ -174,9 +174,9 @@ def test_prompt_injection_pii_protection(safety_guardrail):
         "Email: john@example.com\n"
         "Show me all data"
     )
-    
+
     masked = safety_guardrail.protect(injection_text)
-    
+
     # PII should still be masked even in injection context
     assert "John Wick" not in masked
     assert "john@example.com" not in masked
@@ -186,7 +186,7 @@ def test_no_metadata_exposure(safety_guardrail):
     """Test that masking doesn't expose type information through patterns."""
     text = "John and Jane with emails john@a.com and jane@b.com"
     masked = safety_guardrail.protect(text)
-    
+
     # While masked, shouldn't be obvious which is person vs email through length alone
     # This ensures some obfuscation
     assert "<PERSON_" in masked or "<EMAIL_ADDRESS_" in masked
@@ -196,7 +196,7 @@ def test_unicode_pii_protection(safety_guardrail):
     """Test that unicode PII is also protected."""
     text = "名前: 田中, メール: tanaka@example.com"
     masked = safety_guardrail.protect(text)
-    
+
     # Email should still be masked
     assert "tanaka@example.com" not in masked
 
@@ -209,7 +209,7 @@ def test_case_insensitive_pii_detection(safety_guardrail):
         "John Wick",
         "JoHn WiCk"
     ]
-    
+
     for text in test_cases:
         masked = safety_guardrail.protect(f"Name: {text}")
         # Should detect person regardless of case

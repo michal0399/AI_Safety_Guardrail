@@ -27,7 +27,7 @@ async def handle_chat(payload: ChatRequest):
     try:
         # This now returns a dictionary matching the ChatResponse schema
         result_data = safe_chat(
-            user_prompt=payload.user_prompt, 
+            user_prompt=payload.user_prompt,
             task_instruction=payload.task_instruction
         )
         return ChatResponse(**result_data)

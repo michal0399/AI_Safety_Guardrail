@@ -15,7 +15,7 @@ def load_system_rules(filepath: str = None) -> str:
         # Construct path to safety_rules.txt at project root
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         filepath = os.path.join(project_root, "safety_rules.txt")
-    
+
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             return f.read().strip()
@@ -42,7 +42,7 @@ def safe_chat(user_prompt: str, task_instruction: str = "You are a helpful assis
 
     # 4. Reveal PII locally
     final_output = guard.reveal(ai_raw_response)
-    
+
     # Return everything for API visibility
     return {
         "masked_prompt": masked_prompt,
@@ -53,6 +53,6 @@ def safe_chat(user_prompt: str, task_instruction: str = "You are a helpful assis
 if __name__ == "__main__":
     prompt = "My name is John Wick and my email is boogeyman@continental.com. Can you write a professional bio for me?"
     task = "You are an expert executive resume writer and biographer."
-    
+
     result = safe_chat(prompt, task_instruction=task)
     print(f"\nFINAL OUTPUT:\n{result['final_output']}")
