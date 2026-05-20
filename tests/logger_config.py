@@ -31,15 +31,15 @@ def configure_logging():
     Creates the logs directory if it doesn't exist and loads the
     centralized logging configuration.
     """
-    # Ensure logs directory exists
-    logs_dir = Path("logs")
+    # Ensure logs directory exists (in project root)
+    logs_dir = Path(__file__).parent.parent / "logs"
     logs_dir.mkdir(exist_ok=True)
 
-    # Get the absolute path to logging.conf
-    config_file = Path(__file__).parent / "logging.conf"
+    # Get the absolute path to logging.conf (in project root, not tests/)
+    config_file = Path(__file__).parent.parent / "logging.conf"
 
     if config_file.exists():
-        logging.config.fileConfig(str(config_file))
+        logging.config.fileConfig(str(config_file), encoding='utf-8')
         root_logger = logging.getLogger()
         root_logger.debug(f"Logging configured from {config_file}")
     else:
