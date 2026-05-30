@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 # - Default (or any other value): Use mock judge
 USE_REAL_JUDGE = os.getenv('USE_REAL_JUDGE', '').lower() in ('1', 'true', 'yes')
 
-logger.info(f"Judge Type: {'REAL (Gemini API)' if USE_REAL_JUDGE else 'MOCK (Local)'}")
+logger.info(f"Judge Type: {'REAL (Ollama local)' if USE_REAL_JUDGE else 'MOCK (Local)'}")
 
 # ============================================================================
 # DEEPEVAL JUDGE AND METRICS
@@ -37,7 +37,6 @@ try:
     from deepeval.metrics import GEval
     from deepeval.test_case import LLMTestCase, LLMTestCaseParams
     from deepeval.models.base_model import DeepEvalBaseLLM
-    import google.generativeai as genai
     DEEPEVAL_AVAILABLE = True
 except ImportError:
     DEEPEVAL_AVAILABLE = False
@@ -46,26 +45,157 @@ except ImportError:
 from mock_judge import MockJudge, MockGEvalMetric
 
 
-class GeminiJudge(DeepEvalBaseLLM):
-    """Custom judge using Google Gemini 2.5 Flash for LLM-as-a-judge evaluation."""
+import subprocess
+import shlex
 
-    def __init__(self, model_name="gemini-2.5-flash"):
-        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-        self.model = genai.GenerativeModel(model_name)
+
+class OllamaJudge(DeepEvalBaseLLM):
+    """Judge using a local Ollama installation (calls `ollama generate`).
+
+    Requires `ollama` CLI to be installed and the chosen model available locally.
+    """
+
+    def __init__(self, model_name="llama2"):
+        # model_name should match an installed Ollama model
+        self._model_name = model_name
 
     def load_model(self):
-        return self.model
+        # For Ollama we don't preload a model object; return model identifier
+        return self._model_name
 
     def generate(self, prompt: str) -> str:
-        response = self.model.generate_content(prompt)
-        return response.text
+        # Call local ollama CLI: `ollama generate <model> "<prompt>"`
+        try:
+            cmd = ["ollama", "generate", self._model_name, prompt]
+            # Use subprocess to capture output
+            proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            # Ollama CLI prints generated text to stdout
+            return proc.stdout.strip()
+        except FileNotFoundError:
+            raise RuntimeError("ollama CLI not found. Install Ollama or set USE_REAL_JUDGE=0 to use the mock judge")
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Ollama generation failed: {e.stderr}")
 
     async def a_generate(self, prompt: str) -> str:
-        response = await self.model.generate_content_async(prompt)
-        return response.text
+        # Provide a sync fallback for async usage
+        return self.generate(prompt)
 
     def get_model_name(self):
-        return "Gemini 2.5 Flash"
+        return f"Ollama ({self._model_name})"
+
+# Backwards compatibility: export GeminiJudge name to refer to local Ollama judge
+GeminiJudge = OllamaJudge
+
+# ---------------------------------------------------------------------------
+# Lightweight provider wrappers (placeholders for common providers)
+# ---------------------------------------------------------------------------
+class OpenAIJudge(DeepEvalBaseLLM):
+    """Minimal OpenAI judge wrapper. Requires `openai` package and `OPENAI_API_KEY` env var."""
+
+    def __init__(self, model_name="gpt-4o-mini"):
+        self._model_name = model_name
+
+    def load_model(self):
+        return self._model_name
+
+    def generate(self, prompt: str) -> str:
+        try:
+            import openai
+        except Exception:
+            raise RuntimeError("OpenAI python package not installed. Install with `pip install openai` and set OPENAI_API_KEY in .env")
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY not set in environment (.env)")
+        openai.api_key = api_key
+        try:
+            # Use ChatCompletion if available, fall back to Completion
+            if hasattr(openai, 'ChatCompletion'):
+                resp = openai.ChatCompletion.create(model=self._model_name, messages=[{"role": "user", "content": prompt}])
+                return resp.choices[0].message.content.strip()
+            else:
+                resp = openai.Completion.create(model=self._model_name, prompt=prompt, max_tokens=256)
+                return resp.choices[0].text.strip()
+        except Exception as e:
+            raise RuntimeError(f"OpenAI generation failed: {e}")
+
+
+class AnthropicJudge(DeepEvalBaseLLM):
+    """Placeholder for Anthropic. Requires `anthropic` package and ANTHROPIC_API_KEY."""
+
+    def __init__(self, model_name="claude-v1"):
+        self._model_name = model_name
+
+    def load_model(self):
+        return self._model_name
+
+    def generate(self, prompt: str) -> str:
+        try:
+            from anthropic import Anthropic
+        except Exception:
+            raise RuntimeError("Anthropic client not installed. Install with `pip install anthropic` and set ANTHROPIC_API_KEY in .env")
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise RuntimeError("ANTHROPIC_API_KEY not set in environment (.env)")
+        client = Anthropic(api_key=api_key)
+        try:
+            resp = client.completions.create(model=self._model_name, prompt=prompt, max_tokens=512)
+            return resp.completion.strip()
+        except Exception as e:
+            raise RuntimeError(f"Anthropic generation failed: {e}")
+
+
+class CohereJudge(DeepEvalBaseLLM):
+    """Placeholder for Cohere. Requires `cohere` package and COHERE_API_KEY."""
+
+    def __init__(self, model_name="command-xlarge-nightly"):
+        self._model_name = model_name
+
+    def load_model(self):
+        return self._model_name
+
+    def generate(self, prompt: str) -> str:
+        try:
+            import cohere
+        except Exception:
+            raise RuntimeError("Cohere SDK not installed. Install with `pip install cohere` and set COHERE_API_KEY in .env")
+        api_key = os.getenv('COHERE_API_KEY')
+        if not api_key:
+            raise RuntimeError("COHERE_API_KEY not set in environment (.env)")
+        client = cohere.Client(api_key)
+        try:
+            resp = client.generate(model=self._model_name, prompt=prompt, max_tokens=256)
+            return resp.generations[0].text.strip()
+        except Exception as e:
+            raise RuntimeError(f"Cohere generation failed: {e}")
+
+
+class AzureOpenAIJudge(OpenAIJudge):
+    """Azure OpenAI wrapper (reuses OpenAIJudge logic but expects AZURE_OPENAI_KEY)."""
+
+    def generate(self, prompt: str) -> str:
+        api_key = os.getenv('AZURE_OPENAI_KEY')
+        if not api_key:
+            raise RuntimeError("AZURE_OPENAI_KEY not set in environment (.env)")
+        os.environ['OPENAI_API_KEY'] = api_key
+        return super().generate(prompt)
+
+
+# Factory to create provider-based judge
+def _create_real_judge_from_provider(provider_name: str):
+    p = (provider_name or '').lower()
+    model = os.getenv('REAL_JUDGE_MODEL', '')
+    if p in ('ollama', 'local'):
+        return OllamaJudge(model_name=model or os.getenv('OLLAMA_MODEL', 'opencoder:latest'))
+    if p == 'openai':
+        return OpenAIJudge(model_name=model or 'gpt-4o-mini')
+    if p == 'anthropic':
+        return AnthropicJudge(model_name=model or 'claude-v1')
+    if p == 'cohere':
+        return CohereJudge(model_name=model or 'command-xlarge-nightly')
+    if p in ('azure', 'azure_openai'):
+        return AzureOpenAIJudge(model_name=model or 'gpt-4o-mini')
+    # Unknown provider -> helpful error
+    raise RuntimeError(f"Unknown REAL_JUDGE_PROVIDER '{provider_name}'. Supported: ollama, openai, anthropic, cohere, azure")
 
 
 # ============================================================================
@@ -103,7 +233,12 @@ def gemini_judge():
     if USE_REAL_JUDGE:
         if not DEEPEVAL_AVAILABLE:
             pytest.skip("DeepEval not available")
-        return GeminiJudge()
+        provider = os.getenv('REAL_JUDGE_PROVIDER', 'ollama')
+        try:
+            return _create_real_judge_from_provider(provider)
+        except Exception as e:
+            # If provider creation fails, raise a clear pytest skip
+            pytest.skip(f"Real judge not available: {e}")
     else:
         return MockJudge()
 
@@ -211,7 +346,7 @@ def masked_data_consistency_metric(gemini_judge):
 @pytest.fixture
 def safety_guardrail():
     """Fixture to provide SafetyGuardrail instance."""
-    from safety_guardrail.engine import SafetyGuardrail
+    from safety_guardrail.engine_enhanced import EnhancedSafetyGuardrail as SafetyGuardrail
     return SafetyGuardrail()
 
 @pytest.fixture

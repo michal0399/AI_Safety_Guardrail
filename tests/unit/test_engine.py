@@ -50,11 +50,15 @@ def test_protect_creates_mapping_vault(safety_guardrail, sample_pii_texts):
     assert len(safety_guardrail.mapping_vault) > 0
     assert all(k.startswith("<") and k.endswith(">") for k in safety_guardrail.mapping_vault.keys())
 
-def test_reveal_restores_pii(safety_guardrail, sample_pii_texts, mock_ai_response):
+def test_reveal_restores_pii(safety_guardrail, sample_pii_texts):
     """Test that reveal() restores original PII from placeholders."""
     original_text = sample_pii_texts["person_email"]
     masked = safety_guardrail.protect(original_text)
-    ai_response = mock_ai_response["with_placeholders"]
+
+    # Create AI response using the actual placeholders from the vault
+    # This ensures the indices match what protect() created
+    placeholders = list(safety_guardrail.mapping_vault.keys())
+    ai_response = f"Here is a bio for {placeholders[0]}. You can reach them at {placeholders[1]}."
 
     revealed = safety_guardrail.reveal(ai_response)
 

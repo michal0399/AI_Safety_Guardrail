@@ -1,7 +1,7 @@
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
-from safety_guardrail.engine import SafetyGuardrail
+from safety_guardrail.engine_enhanced import EnhancedSafetyGuardrail as SafetyGuardrail
 
 load_dotenv()
 

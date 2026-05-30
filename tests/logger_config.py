@@ -42,6 +42,28 @@ def configure_logging():
         logging.config.fileConfig(str(config_file), encoding='utf-8')
         root_logger = logging.getLogger()
         root_logger.debug(f"Logging configured from {config_file}")
+        # Ensure file handlers use UTF-8 to avoid Windows cp1252 errors when logs contain emojis
+        try:
+            from logging.handlers import RotatingFileHandler
+            # Set encoding on handlers for root logger
+            for h in root_logger.handlers:
+                if isinstance(h, RotatingFileHandler):
+                    try:
+                        h.encoding = 'utf-8'
+                    except Exception:
+                        pass
+            # Also set encoding on handlers for any other configured loggers
+            manager = logging.root.manager
+            for logger_name, logger_obj in list(manager.loggerDict.items()):
+                if isinstance(logger_obj, logging.Logger):
+                    for h in logger_obj.handlers:
+                        if isinstance(h, RotatingFileHandler):
+                            try:
+                                h.encoding = 'utf-8'
+                            except Exception:
+                                pass
+        except Exception:
+            pass
     else:
         # Fallback: basic configuration if logging.conf not found
         logging.basicConfig(
@@ -76,6 +98,22 @@ def log_judge_result(judge_logger: logging.Logger, metric_name: str, score: floa
         f"    Score: {score:.2f}/{threshold:.2f}\n"
         f"    Reasoning: {formatted_reason}\n"
     )
+
+    # Robust fallback: append the same formatted message to the judge_results.log file
+    try:
+        logs_dir = Path(__file__).parent.parent / "logs"
+        log_path = logs_dir / 'judge_results.log'
+        fallback_msg = (
+            f"[\n] Judge: {metric_name}\n"
+            f"Status: {status}\n"
+            f"Score: {score:.2f}/{threshold:.2f}\n"
+            f"Reasoning: {formatted_reason}\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        )
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(fallback_msg)
+    except Exception:
+        pass
 
 
 def log_test_header(logger: logging.Logger, test_name: str, test_type: str = "UNIT"):

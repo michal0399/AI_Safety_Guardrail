@@ -12,9 +12,11 @@ wheels/
 # Environment
 .env
 .github
+.env.example
 
 # Tests
 .pytest_cache/
 .coverage
 htmlcov/
 *.log
+*.log.*
