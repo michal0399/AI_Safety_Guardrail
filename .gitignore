@@ -12,7 +12,6 @@ wheels/
 # Environment
 .env
 .github
-.env.example
 
 # Tests
 .pytest_cache/

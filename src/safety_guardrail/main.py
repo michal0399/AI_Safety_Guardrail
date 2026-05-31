@@ -1,8 +1,15 @@
 import os
+from pathlib import Path
 from typing import List, Optional
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
+
+# Defaults from .env.example, then overrides from .env (if present)
+_project_root = Path(__file__).resolve().parents[2]
+load_dotenv(_project_root / ".env.example")
+load_dotenv(_project_root / ".env")
 
 from safety_guardrail.api_keys import delete_api_key, generate_api_key, list_api_keys, revoke_api_key, verify_api_key
 from safety_guardrail.chat import safe_chat
