@@ -148,13 +148,13 @@ pytest tests/ -v -s --tb=long
 - Regex-based pattern detection for 7 PII types
 - Heuristic evaluation for response quality
 - Zero API overhead
-- See [MOCK_JUDGE.md](MOCK_JUDGE.md) for details
+- See [Mock judge guide](docs/MOCK_JUDGE.md) for details
 
 ### Batch Processing
 - Evaluate up to 20 test cases in 1 API request
 - 95% quota savings vs. individual requests
 - Built-in batch processor ready for integration
-- See [MOCK_JUDGE.md](MOCK_JUDGE.md#batch-processing) for examples
+- See [Mock judge guide](docs/MOCK_JUDGE.md#batch-processing) for examples
 
 ## Logging
 
@@ -164,13 +164,21 @@ Comprehensive logging system with:
 - Judge results logged to `logs/judge_results.log`
 - Test summary in `logs/test_suite.log`
 
-Configure in `logging.conf` - see [LOGGING.md](LOGGING.md) for details.
+Configure in `logging.conf` - see [Logging guide](docs/LOGGING.md) for details.
 
 ## Documentation
 
-- [LOGGING.md](LOGGING.md) - Logging configuration and usage
-- [MOCK_JUDGE.md](MOCK_JUDGE.md) - Mock judge and batch processing guide
-- Inline code documentation with docstrings
+All project docs live in [`docs/`](docs/):
+
+- [Contributing](docs/CONTRIBUTING.md) — Development setup and pull request guidelines
+- [Testing](docs/TESTING.md) — Test commands, markers, and troubleshooting
+- [Test structure](docs/TEST_STRUCTURE.md) — Layout of the `tests/` directory
+- [API keys](docs/API_KEYS.md) — Admin and service key management
+- [Logging](docs/LOGGING.md) — Logging configuration and usage
+- [Mock judge](docs/MOCK_JUDGE.md) — Mock judge and batch processing guide
+- [Presidio configuration](docs/PRESIDIO_CONFIGURATION.md) — PII detection setup
+- [Cleanup](docs/CLEANUP.md) — Environment cleanup
+- [Implementation summary](docs/IMPLEMENTATION_SUMMARY.md) — Feature and architecture overview
 
 ## Performance
 
@@ -236,4 +244,4 @@ USE_REAL_JUDGE=1 pytest tests/
 
 ## Contributing
 
-[Contributing guidelines here]
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for setup, coding standards, and pull request guidelines.

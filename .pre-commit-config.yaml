@@ -26,15 +26,16 @@ repos:
     hooks:
       - id: bandit
         name: bandit (security)
-        entry: python -m bandit
+        entry: bandit
         args: ["-l", "-i", "--exclude", "tests/"]
-        language: system
+        language: python
+        language_version: python3.13
+        additional_dependencies: ["bandit>=1.7"]
         types: [python]
 
       - id: pytest
         name: pytest (unit tests)
-        entry: python -m pytest
-        args: ["tests/test_api_keys.py", "-v", "--tb=short"]
+        entry: python tools/precommit_pytest.py
         language: system
         pass_filenames: false
         stages: [commit]
@@ -42,8 +43,10 @@ repos:
 
       - id: safety
         name: safety (dependencies)
-        entry: python -m safety
+        entry: safety
         args: ["check", "--short-report"]
-        language: system
+        language: python
+        language_version: python3.13
+        additional_dependencies: ["safety>=3.7.0"]
         pass_filenames: false
         stages: [commit]
