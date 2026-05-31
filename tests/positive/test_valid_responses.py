@@ -1,10 +1,13 @@
 """Positive tests: Valid API responses."""
-import pytest
+
 import re
+
+import pytest
 from deepeval.test_case import LLMTestCase
 
 try:
     from deepeval.test_case import LLMTestCase
+
     DEEPEVAL_AVAILABLE = True
 except ImportError:
     DEEPEVAL_AVAILABLE = False
@@ -13,10 +16,7 @@ except ImportError:
 def test_valid_request_structure(safety_guardrail):
     """Test that valid requests are processed."""
     # Verify request validation
-    request_data = {
-        "user_prompt": "Test prompt",
-        "task_instruction": "Test instruction"
-    }
+    request_data = {"user_prompt": "Test prompt", "task_instruction": "Test instruction"}
 
     # Should have required fields
     assert "user_prompt" in request_data
@@ -51,7 +51,7 @@ def test_valid_placeholder_format(safety_guardrail):
     masked = safety_guardrail.protect(text)
 
     # Placeholders should match pattern: <ENTITY_TYPE_NUMBER>
-    placeholder_pattern = r'<[A-Z_]+_\d+>'
+    placeholder_pattern = r"<[A-Z_]+_\d+>"
 
     if "<" in masked:
         placeholders = re.findall(placeholder_pattern, masked)
@@ -66,15 +66,13 @@ def test_masked_data_consistency_judge(safety_guardrail, masked_data_consistency
     masked = safety_guardrail.protect(text)
 
     # Unit test: Verify consistent placeholder format
-    placeholder_pattern = r'<[A-Z_]+_\d+>'
+    placeholder_pattern = r"<[A-Z_]+_\d+>"
     placeholders = re.findall(placeholder_pattern, masked)
     assert all(re.match(placeholder_pattern, p) for p in placeholders)
 
     # LLM-as-a-judge: Comprehensive consistency evaluation
-    test_case = LLMTestCase(
-        input=text,
-        actual_output=masked
-    )
+    test_case = LLMTestCase(input=text, actual_output=masked)
     masked_data_consistency_metric.measure(test_case)
-    assert masked_data_consistency_metric.score >= masked_data_consistency_metric.threshold, \
-        f"Masked Data Consistency failed: {masked_data_consistency_metric.reason}"
+    assert (
+        masked_data_consistency_metric.score >= masked_data_consistency_metric.threshold
+    ), f"Masked Data Consistency failed: {masked_data_consistency_metric.reason}"

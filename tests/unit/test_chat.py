@@ -1,9 +1,12 @@
 """Unit tests for chat module functions."""
-import pytest
+
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src', 'safety_guardrail'))
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src", "safety_guardrail"))
+
 
 def test_load_system_rules_exists(sample_pii_texts):
     """Test loading system rules from existing file."""
@@ -15,6 +18,7 @@ def test_load_system_rules_exists(sample_pii_texts):
     assert "CRITICAL SYSTEM RULES" in rules or len(rules) > 0
     assert isinstance(rules, str)
 
+
 def test_load_system_rules_not_found():
     """Test graceful handling when rules file doesn't exist."""
     from chat import load_system_rules
@@ -24,6 +28,7 @@ def test_load_system_rules_not_found():
 
     # Should return empty string, not raise exception
     assert rules == ""
+
 
 def test_safe_chat_returns_dict():
     """Test that safe_chat returns a dictionary with expected keys."""

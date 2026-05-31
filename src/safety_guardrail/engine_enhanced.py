@@ -1,7 +1,8 @@
 """Enhanced Safety Guardrail with multi-language and custom format support."""
 
 import re
-from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern
+
+from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities import OperatorConfig
 
@@ -23,7 +24,7 @@ class EnhancedSafetyGuardrail:
             languages: List of language codes ['en', 'es', 'fr', 'de', 'pt']. Default: ['en']
             enable_custom_formats: If True, add regex-based recognizers for phones, IDs, etc.
         """
-        self.languages = languages or ['en']
+        self.languages = languages or ["en"]
         # Use default AnalyzerEngine which includes spaCy NLP for PERSON detection
         self.analyzer = AnalyzerEngine()
         self.anonymizer = AnonymizerEngine()
@@ -44,68 +45,53 @@ class EnhancedSafetyGuardrail:
         phone_patterns = [
             # ===== LOCAL/PLAIN FORMATS =====
             # Plain US/local: 555-123-4567, (555) 123-4567, 555.123.4567
-            r'\b\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b',
-            r'\b\d{3}[\s.-]?\d{3}[\s.-]?\d{4}\b',
-
+            r"\b\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b",
+            r"\b\d{3}[\s.-]?\d{3}[\s.-]?\d{4}\b",
             # US/Canada: +1 (555) 123-4567, +1-555-123-4567, (555) 123-4567, 555-123-4567
-            r'\+?1[\s.-]?\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})\b',
-
+            r"\+?1[\s.-]?\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})\b",
             # UK: +44 20 XXXX XXXX, 020 XXXX XXXX, +44(0)20 XXXX XXXX
-            r'\+?44[\s.-]?0?20[\s.-]?\d{4}[\s.-]?\d{4}\b',
-            r'\+?44[\s.-]?0?20[\s.-]?\d{3,4}[\s.-]?\d{4,5}\b',
-
+            r"\+?44[\s.-]?0?20[\s.-]?\d{4}[\s.-]?\d{4}\b",
+            r"\+?44[\s.-]?0?20[\s.-]?\d{3,4}[\s.-]?\d{4,5}\b",
             # Germany: +49 30 XXXX XXXX, 030 XXXX XXXX, +49 (0)30 XXXX XXXX
-            r'\+?49[\s.-]?0?30[\s.-]?\d{3,4}[\s.-]?\d{4,5}\b',
-            r'\+?49[\s.-]?0?\d{2,5}[\s.-]?\d{3,9}\b',
-
+            r"\+?49[\s.-]?0?30[\s.-]?\d{3,4}[\s.-]?\d{4,5}\b",
+            r"\+?49[\s.-]?0?\d{2,5}[\s.-]?\d{3,9}\b",
             # France: +33 1 XXXX XXXX, 01 XXXX XXXX, +33 (0)1 XXXX XXXX
-            r'\+?33[\s.-]?0?[1-9][\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2}\b',
-
+            r"\+?33[\s.-]?0?[1-9][\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2}\b",
             # Spain: +34 9XX XXXXX or +34 X XXXX XXXX
-            r'\+?34[\s.-]?[689]\d{2}[\s.-]?\d{2}[\s.-]?\d{3}\b',
-            r'\+?34[\s.-]?[1-9][\s.-]?\d{4}[\s.-]?\d{4}\b',
-
+            r"\+?34[\s.-]?[689]\d{2}[\s.-]?\d{2}[\s.-]?\d{3}\b",
+            r"\+?34[\s.-]?[1-9][\s.-]?\d{4}[\s.-]?\d{4}\b",
             # Italy: +39 06 XXXX XXXX, 06 XXXX XXXX
-            r'\+?39[\s.-]?06[\s.-]?\d{4}[\s.-]?\d{4}\b',
-            r'\+?39[\s.-]?\d{2,4}[\s.-]?\d{3,4}[\s.-]?\d{3,4}\b',
-
+            r"\+?39[\s.-]?06[\s.-]?\d{4}[\s.-]?\d{4}\b",
+            r"\+?39[\s.-]?\d{2,4}[\s.-]?\d{3,4}[\s.-]?\d{3,4}\b",
             # Netherlands: +31 6 XXXX XXXX, 06 XXXX XXXX
-            r'\+?31[\s.-]?6[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2,3}\b',
-            r'\+?31[\s.-]?0?[1-9][\s.-]?\d{2,3}[\s.-]?\d{4,6}\b',
-
+            r"\+?31[\s.-]?6[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2,3}\b",
+            r"\+?31[\s.-]?0?[1-9][\s.-]?\d{2,3}[\s.-]?\d{4,6}\b",
             # Belgium: +32 2 XXXX XXXX, 02 XXXX XXXX
-            r'\+?32[\s.-]?0?2[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}\b',
-
+            r"\+?32[\s.-]?0?2[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}\b",
             # China: +86 10 XXXX XXXX, 010 XXXX XXXX
-            r'\+?86[\s.-]?10[\s.-]?\d{4}[\s.-]?\d{4}\b',
-            r'\+?86[\s.-]?0?[1-9]\d{1,2}[\s.-]?\d{4}[\s.-]?\d{4}\b',
-
+            r"\+?86[\s.-]?10[\s.-]?\d{4}[\s.-]?\d{4}\b",
+            r"\+?86[\s.-]?0?[1-9]\d{1,2}[\s.-]?\d{4}[\s.-]?\d{4}\b",
             # Japan: +81 3 XXXX XXXX, 03 XXXX XXXX, +81 (0)3 XXXX XXXX
-            r'\+?81[\s.-]?0?3[\s.-]?\d{4}[\s.-]?\d{4}\b',
-            r'\+?81[\s.-]?0?\d{1,4}[\s.-]?\d{2,4}[\s.-]?\d{4}\b',
-
+            r"\+?81[\s.-]?0?3[\s.-]?\d{4}[\s.-]?\d{4}\b",
+            r"\+?81[\s.-]?0?\d{1,4}[\s.-]?\d{2,4}[\s.-]?\d{4}\b",
             # Australia: +61 2 XXXX XXXX, 02 XXXX XXXX
-            r'\+?61[\s.-]?0?2[\s.-]?\d{4}[\s.-]?\d{4}\b',
-            r'\+?61[\s.-]?0?[1-9][\s.-]?\d{3,4}[\s.-]?\d{3,4}\b',
-
+            r"\+?61[\s.-]?0?2[\s.-]?\d{4}[\s.-]?\d{4}\b",
+            r"\+?61[\s.-]?0?[1-9][\s.-]?\d{3,4}[\s.-]?\d{3,4}\b",
             # Brazil: +55 11 XXXX XXXX, (11) XXXX XXXX
-            r'\+?55[\s.-]?\(?0?1\d\)?[\s.-]?\d{4}[\s.-]?\d{4}\b',
-
+            r"\+?55[\s.-]?\(?0?1\d\)?[\s.-]?\d{4}[\s.-]?\d{4}\b",
             # India: +91 XX XXXX XXXX, +91 XXXXXXXXXX
-            r'\+?91[\s.-]?\d{10}\b',
-            r'\+?91[\s.-]?\d{2}[\s.-]?\d{4}[\s.-]?\d{4}\b',
-
+            r"\+?91[\s.-]?\d{10}\b",
+            r"\+?91[\s.-]?\d{2}[\s.-]?\d{4}[\s.-]?\d{4}\b",
             # Mexico: +52 XX XXXX XXXX
-            r'\+?52[\s.-]?\d{2,3}[\s.-]?\d{4}[\s.-]?\d{4}\b',
-
+            r"\+?52[\s.-]?\d{2,3}[\s.-]?\d{4}[\s.-]?\d{4}\b",
             # Generic international: +XXX XXX XXX XXX (catch-all)
-            r'\+\d{1,3}[\s.-]?\d{1,5}[\s.-]?\d{1,5}[\s.-]?\d{1,9}\b',
+            r"\+\d{1,3}[\s.-]?\d{1,5}[\s.-]?\d{1,5}[\s.-]?\d{1,9}\b",
         ]
 
         phone_recognizer = PatternRecognizer(
             supported_entity="PHONE_NUMBER",
             patterns=[Pattern(name="phone", regex=pattern, score=0.8) for pattern in phone_patterns],
-            name="international_phone"
+            name="international_phone",
         )
         registry.add_recognizer(phone_recognizer)
 
@@ -115,10 +101,10 @@ class EnhancedSafetyGuardrail:
         ssn_recognizer = PatternRecognizer(
             supported_entity="SSN",
             patterns=[
-                Pattern(name="ssn_dashes", regex=r'\b\d{3}-\d{2}-\d{4}\b', score=0.9),
-                Pattern(name="ssn_spaces", regex=r'\b\d{3}\s\d{2}\s\d{4}\b', score=0.9),
-                Pattern(name="ssn_valid", regex=r'\b(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0{4})\d{4}\b', score=0.95),
-            ]
+                Pattern(name="ssn_dashes", regex=r"\b\d{3}-\d{2}-\d{4}\b", score=0.9),
+                Pattern(name="ssn_spaces", regex=r"\b\d{3}\s\d{2}\s\d{4}\b", score=0.9),
+                Pattern(name="ssn_valid", regex=r"\b(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0{4})\d{4}\b", score=0.95),
+            ],
         )
         registry.add_recognizer(ssn_recognizer)
 
@@ -126,9 +112,13 @@ class EnhancedSafetyGuardrail:
         iban_recognizer = PatternRecognizer(
             supported_entity="IBAN",
             patterns=[
-                Pattern(name="iban_spaced", regex=r'\b[A-Z]{2}\d{2}[\s.-]?[A-Z0-9]{4}[\s.-]?[A-Z0-9]{4}[\s.-]?[A-Z0-9]{4}[\s.-]?[A-Z0-9]{2,3}\b', score=0.9),
-                Pattern(name="iban_unspaced", regex=r'\b[A-Z]{2}\d{2}[A-Z0-9]{1,30}\b', score=0.8),
-            ]
+                Pattern(
+                    name="iban_spaced",
+                    regex=r"\b[A-Z]{2}\d{2}[\s.-]?[A-Z0-9]{4}[\s.-]?[A-Z0-9]{4}[\s.-]?[A-Z0-9]{4}[\s.-]?[A-Z0-9]{2,3}\b",
+                    score=0.9,
+                ),
+                Pattern(name="iban_unspaced", regex=r"\b[A-Z]{2}\d{2}[A-Z0-9]{1,30}\b", score=0.8),
+            ],
         )
         registry.add_recognizer(iban_recognizer)
 
@@ -136,9 +126,9 @@ class EnhancedSafetyGuardrail:
         passport_recognizer = PatternRecognizer(
             supported_entity="PASSPORT",
             patterns=[
-                Pattern(name="passport_long", regex=r'\b[A-Z]{1,2}\d{6,9}\b', score=0.8),
-                Pattern(name="passport_short", regex=r'\b[A-Z]{1,3}\d{5,8}\b', score=0.7),
-            ]
+                Pattern(name="passport_long", regex=r"\b[A-Z]{1,2}\d{6,9}\b", score=0.8),
+                Pattern(name="passport_short", regex=r"\b[A-Z]{1,3}\d{5,8}\b", score=0.7),
+            ],
         )
         registry.add_recognizer(passport_recognizer)
 
@@ -146,9 +136,9 @@ class EnhancedSafetyGuardrail:
         tax_id_recognizer = PatternRecognizer(
             supported_entity="TAX_ID",
             patterns=[
-                Pattern(name="tax_id_dashes", regex=r'\b\d{2}-\d{7}\b', score=0.9),
-                Pattern(name="tax_id_nodashes", regex=r'\b\d{9}\b', score=0.6),
-            ]
+                Pattern(name="tax_id_dashes", regex=r"\b\d{2}-\d{7}\b", score=0.9),
+                Pattern(name="tax_id_nodashes", regex=r"\b\d{9}\b", score=0.6),
+            ],
         )
         registry.add_recognizer(tax_id_recognizer)
 
@@ -156,9 +146,9 @@ class EnhancedSafetyGuardrail:
         drivers_license_recognizer = PatternRecognizer(
             supported_entity="DRIVERS_LICENSE",
             patterns=[
-                Pattern(name="dl_alpha_num", regex=r'\b[A-Z]{1,3}\d{5,8}\b', score=0.7),
-                Pattern(name="dl_num", regex=r'\b\d{5,8}[A-Z]?\b', score=0.6),
-            ]
+                Pattern(name="dl_alpha_num", regex=r"\b[A-Z]{1,3}\d{5,8}\b", score=0.7),
+                Pattern(name="dl_num", regex=r"\b\d{5,8}[A-Z]?\b", score=0.6),
+            ],
         )
         registry.add_recognizer(drivers_license_recognizer)
 
@@ -166,8 +156,12 @@ class EnhancedSafetyGuardrail:
         ni_recognizer = PatternRecognizer(
             supported_entity="NI_NUMBER",
             patterns=[
-                Pattern(name="ni_number", regex=r'\b[A-Z]{2}[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?[A-Z]{1}\b', score=0.9),
-            ]
+                Pattern(
+                    name="ni_number",
+                    regex=r"\b[A-Z]{2}[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?[A-Z]{1}\b",
+                    score=0.9,
+                ),
+            ],
         )
         registry.add_recognizer(ni_recognizer)
 
@@ -175,9 +169,9 @@ class EnhancedSafetyGuardrail:
         cc_recognizer = PatternRecognizer(
             supported_entity="CREDIT_CARD",
             patterns=[
-                Pattern(name="cc_spaced", regex=r'\b(?:\d{4}[\s.-]?){3}\d{4}\b', score=0.9),
-                Pattern(name="cc_unspaced", regex=r'\b\d{13,19}\b', score=0.7),
-            ]
+                Pattern(name="cc_spaced", regex=r"\b(?:\d{4}[\s.-]?){3}\d{4}\b", score=0.9),
+                Pattern(name="cc_unspaced", regex=r"\b\d{13,19}\b", score=0.7),
+            ],
         )
         registry.add_recognizer(cc_recognizer)
 
@@ -186,10 +180,18 @@ class EnhancedSafetyGuardrail:
             supported_entity="LOCATION",
             patterns=[
                 # Street address: 123 Main Street, 456 Oak Avenue, etc.
-                Pattern(name="street_address", regex=r'\b\d{1,5}\s+[A-Z][a-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Court|Ct|Circle|Cir|Way|Parkway|Pkwy)\b', score=0.85),
+                Pattern(
+                    name="street_address",
+                    regex=r"\b\d{1,5}\s+[A-Z][a-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Court|Ct|Circle|Cir|Way|Parkway|Pkwy)\b",
+                    score=0.85,
+                ),
                 # Simpler: Number + Street name
-                Pattern(name="simple_address", regex=r'\b\d{1,5}\s+[A-Z][a-z\s]+\s+(St|Ave|Rd|Blvd|Dr|Ln|Ct|Way)\b', score=0.75),
-            ]
+                Pattern(
+                    name="simple_address",
+                    regex=r"\b\d{1,5}\s+[A-Z][a-z\s]+\s+(St|Ave|Rd|Blvd|Dr|Ln|Ct|Way)\b",
+                    score=0.75,
+                ),
+            ],
         )
         registry.add_recognizer(address_recognizer)
 
@@ -198,15 +200,27 @@ class EnhancedSafetyGuardrail:
             supported_entity="DATE_TIME",
             patterns=[
                 # Full date with month name: January 15, 1990 or 15 January 1990
-                Pattern(name="date_month_name", regex=r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b', score=0.9),
-                Pattern(name="date_month_name_alt", regex=r'\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b', score=0.9),
+                Pattern(
+                    name="date_month_name",
+                    regex=r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b",
+                    score=0.9,
+                ),
+                Pattern(
+                    name="date_month_name_alt",
+                    regex=r"\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b",
+                    score=0.9,
+                ),
                 # Short month names
-                Pattern(name="date_month_short", regex=r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4}\b', score=0.85),
+                Pattern(
+                    name="date_month_short",
+                    regex=r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4}\b",
+                    score=0.85,
+                ),
                 # Numeric dates: 01/15/1990, 15-01-1990, 2023-05-20
-                Pattern(name="date_numeric_slash", regex=r'\b\d{1,2}/\d{1,2}/\d{2,4}\b', score=0.75),
-                Pattern(name="date_numeric_dash", regex=r'\b\d{1,2}-\d{1,2}-\d{2,4}\b', score=0.75),
-                Pattern(name="date_iso", regex=r'\b\d{4}-\d{1,2}-\d{1,2}\b', score=0.80),
-            ]
+                Pattern(name="date_numeric_slash", regex=r"\b\d{1,2}/\d{1,2}/\d{2,4}\b", score=0.75),
+                Pattern(name="date_numeric_dash", regex=r"\b\d{1,2}-\d{1,2}-\d{2,4}\b", score=0.75),
+                Pattern(name="date_iso", regex=r"\b\d{4}-\d{1,2}-\d{1,2}\b", score=0.80),
+            ],
         )
         registry.add_recognizer(date_recognizer)
 
@@ -238,22 +252,29 @@ class EnhancedSafetyGuardrail:
 
         # Detect all entity types
         entities = [
-            "PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "LOCATION",
-            "DATE_TIME", "CREDIT_CARD", "URL", "IP_ADDRESS",
-            "SSN", "IBAN", "PASSPORT", "TAX_ID", "DRIVERS_LICENSE", "NI_NUMBER"
+            "PERSON",
+            "EMAIL_ADDRESS",
+            "PHONE_NUMBER",
+            "LOCATION",
+            "DATE_TIME",
+            "CREDIT_CARD",
+            "URL",
+            "IP_ADDRESS",
+            "SSN",
+            "IBAN",
+            "PASSPORT",
+            "TAX_ID",
+            "DRIVERS_LICENSE",
+            "NI_NUMBER",
         ]
 
         # Analyze
-        results = self.analyzer.analyze(
-            text=text,
-            entities=entities,
-            language=lang
-        )
+        results = self.analyzer.analyze(text=text, entities=entities, language=lang)
 
         # Mask PII
         anonymized_text = text
         for i, res in enumerate(results):
-            original_val = text[res.start:res.end]
+            original_val = text[res.start : res.end]
             placeholder = f"<{res.entity_type}_{i}>"
 
             # Store in vault
@@ -298,7 +319,7 @@ SafetyGuardrail = EnhancedSafetyGuardrail
 
 if __name__ == "__main__":
     # Example: Multi-language with custom formats
-    guard = EnhancedSafetyGuardrail(languages=['en', 'es', 'fr'], enable_custom_formats=True)
+    guard = EnhancedSafetyGuardrail(languages=["en", "es", "fr"], enable_custom_formats=True)
 
     # Test examples
     examples = [
@@ -306,13 +327,11 @@ if __name__ == "__main__":
         "Call me at +1 (555) 123-4567",
         "Or reach me at 020 7946 0958 (UK)",
         "German: +49 30 12345678",
-
         # ID numbers
         "My SSN is 123-45-6789",
         "Passport: US123456789",
         "IBAN: GB82 WEST 1234 5698 7654 32",
         "Tax ID: 12-3456789",
-
         # Combined
         "Contact John at john@example.com, +1-555-123-4567 or john.doe@company.com",
     ]

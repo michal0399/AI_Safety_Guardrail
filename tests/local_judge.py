@@ -1,5 +1,6 @@
 import requests
 
+
 def call_local_judge(prompt: str, model_name: str = "opencoder:8b") -> str:
     """Sends evaluation prompt directly to local Ollama instance."""
     url = "http://localhost:11434/api/chat"
@@ -7,9 +8,7 @@ def call_local_judge(prompt: str, model_name: str = "opencoder:8b") -> str:
         "model": model_name,
         "messages": [{"role": "user", "content": prompt}],
         "stream": False,
-        "options": {
-            "temperature": 0.0  # Force deterministic scoring for testing
-        }
+        "options": {"temperature": 0.0},  # Force deterministic scoring for testing
     }
 
     try:

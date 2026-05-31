@@ -1,16 +1,25 @@
 version: '3.8'
 
 services:
-  api:
+  redis:
+    image: redis:7-alpine
+    container_name: safetyguardrail-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  app:
     build: .
-    container_name: safety_guardrail_api
+    container_name: safetyguardrail-app
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - PII_SERVICE_API_KEY=${PII_SERVICE_API_KEY}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - API_KEY_SECRET=${API_KEY_SECRET}
     ports:
       - "8000:8000"
-    environment:
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-    volumes:
-      - ./src:/app/src
-      - ./safety_rules.txt:/app/safety_rules.txt
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]

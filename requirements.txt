@@ -1,0 +1,25 @@
+fastapi
+uvicorn[standard]
+redis
+presidio-analyzer
+presidio-anonymizer
+python-dotenv
+
+# Testing
+pytest>=7.0
+pytest-cov>=4.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0
+
+# Code quality
+black>=24.0
+isort>=5.12
+pylint>=3.0
+mypy>=1.0
+bandit>=1.7
+yamllint>=1.35
+pydocstyle>=6.3
+
+# Pre-commit
+pre-commit>=3.0
+safety>=3.0

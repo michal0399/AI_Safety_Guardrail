@@ -1,0 +1,16 @@
+# Bandit security configuration
+# See: https://bandit.readthedocs.io/
+
+exclude_dirs:
+  - tests
+  - .venv
+  - venv
+  - .git
+  - __pycache__
+
+skips: []
+
+# Severity levels: LOW, MEDIUM, HIGH
+severity_level: LOW
+
+assert_used: false

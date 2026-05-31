@@ -1,5 +1,7 @@
 """Regression tests: Known issues and previously fixed bugs."""
+
 import pytest
+
 
 def test_birthdate_masking_regression(safety_guardrail):
     """
@@ -13,6 +15,7 @@ def test_birthdate_masking_regression(safety_guardrail):
     # This should now be masked
     assert "01/15/1990" not in masked or "<DATE_TIME_" in masked
 
+
 def test_address_masking_regression(safety_guardrail):
     """
     REGRESSION TEST: Ensure addresses are masked.
@@ -24,6 +27,7 @@ def test_address_masking_regression(safety_guardrail):
 
     # This should now be masked
     assert "123 Main Street" not in masked or "<LOCATION_" in masked
+
 
 def test_phone_number_masking_regression(safety_guardrail):
     """
@@ -37,6 +41,7 @@ def test_phone_number_masking_regression(safety_guardrail):
     # This should now be masked
     assert "555-123-4567" not in masked or "<PHONE_NUMBER_" in masked
 
+
 def test_placeholder_format_consistency(safety_guardrail):
     """
     REGRESSION TEST: Ensure placeholders follow consistent format.
@@ -48,11 +53,13 @@ def test_placeholder_format_consistency(safety_guardrail):
 
     # All placeholders should follow the pattern
     import re
-    placeholders = re.findall(r'<[^>]+>', masked)
+
+    placeholders = re.findall(r"<[^>]+>", masked)
 
     for placeholder in placeholders:
         # Should match pattern: <WORD_NUMBER> or <WORD_WORD_NUMBER>
-        assert re.match(r'^<[A-Z_]+_\d+>$', placeholder)
+        assert re.match(r"^<[A-Z_]+_\d+>$", placeholder)
+
 
 def test_mapping_vault_stability(safety_guardrail):
     """
@@ -73,6 +80,7 @@ def test_mapping_vault_stability(safety_guardrail):
 
     # Guard1's vault should not change
     assert len(guard1.mapping_vault) == vault1_size
+
 
 def test_complete_workflow_end_to_end(safety_guardrail):
     """

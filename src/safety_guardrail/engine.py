@@ -2,6 +2,7 @@ from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities import OperatorConfig
 
+
 class SafetyGuardrail:
     def __init__(self):
         self.analyzer = AnalyzerEngine()
@@ -24,19 +25,28 @@ class SafetyGuardrail:
             return text
 
         # 1. Analyze - detect comprehensive PII types
-        entities = ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "LOCATION", "DATE_TIME", "CREDIT_CARD", "URL", "IP_ADDRESS"]
-        results = self.analyzer.analyze(text=text, entities=entities, language='en')
+        entities = [
+            "PERSON",
+            "EMAIL_ADDRESS",
+            "PHONE_NUMBER",
+            "LOCATION",
+            "DATE_TIME",
+            "CREDIT_CARD",
+            "URL",
+            "IP_ADDRESS",
+        ]
+        results = self.analyzer.analyze(text=text, entities=entities, language="en")
 
         # 2. Define custom masking to create unique IDs
         operators = {
             "PERSON": OperatorConfig("mask", {"masking_char": "*", "chars_to_mask": 0, "from_end": False}),
-            "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "<EMAIL>"})
+            "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "<EMAIL>"}),
         }
 
         # For a professional portfolio, we'll manually map them to keep it simple but effective
         anonymized_text = text
         for i, res in enumerate(results):
-            original_val = text[res.start:res.end]
+            original_val = text[res.start : res.end]
             placeholder = f"<{res.entity_type}_{i}>"
 
             # Store in our vault
@@ -59,6 +69,7 @@ class SafetyGuardrail:
         for placeholder, original_val in self.mapping_vault.items():
             revealed_text = revealed_text.replace(placeholder, original_val)
         return revealed_text
+
 
 # --- Test the Loop ---
 if __name__ == "__main__":

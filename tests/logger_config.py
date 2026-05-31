@@ -39,17 +39,18 @@ def configure_logging():
     config_file = Path(__file__).parent.parent / "logging.conf"
 
     if config_file.exists():
-        logging.config.fileConfig(str(config_file), encoding='utf-8')
+        logging.config.fileConfig(str(config_file), encoding="utf-8")
         root_logger = logging.getLogger()
         root_logger.debug(f"Logging configured from {config_file}")
         # Ensure file handlers use UTF-8 to avoid Windows cp1252 errors when logs contain emojis
         try:
             from logging.handlers import RotatingFileHandler
+
             # Set encoding on handlers for root logger
             for h in root_logger.handlers:
                 if isinstance(h, RotatingFileHandler):
                     try:
-                        h.encoding = 'utf-8'
+                        h.encoding = "utf-8"
                     except Exception:
                         pass
             # Also set encoding on handlers for any other configured loggers
@@ -59,22 +60,18 @@ def configure_logging():
                     for h in logger_obj.handlers:
                         if isinstance(h, RotatingFileHandler):
                             try:
-                                h.encoding = 'utf-8'
+                                h.encoding = "utf-8"
                             except Exception:
                                 pass
         except Exception:
             pass
     else:
         # Fallback: basic configuration if logging.conf not found
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s'
-        )
+        logging.basicConfig(level=logging.DEBUG, format="%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s")
         logging.warning(f"logging.conf not found at {config_file}. Using basic configuration.")
 
 
-def log_judge_result(judge_logger: logging.Logger, metric_name: str, score: float,
-                     reason: str, threshold: float = 0.7):
+def log_judge_result(judge_logger: logging.Logger, metric_name: str, score: float, reason: str, threshold: float = 0.7):
     """Log LLM-as-a-Judge evaluation result with formatted output.
 
     Args:
@@ -87,8 +84,8 @@ def log_judge_result(judge_logger: logging.Logger, metric_name: str, score: floa
     status = "✅ PASS" if score >= threshold else "❌ FAIL"
 
     # Format reason for readability (truncate if too long)
-    reason_lines = reason.split('\n') if reason else ["No reasoning provided"]
-    formatted_reason = '\n    '.join(reason_lines[:5])  # Limit to 5 lines
+    reason_lines = reason.split("\n") if reason else ["No reasoning provided"]
+    formatted_reason = "\n    ".join(reason_lines[:5])  # Limit to 5 lines
     if len(reason_lines) > 5:
         formatted_reason += f"\n    ... ({len(reason_lines) - 5} more lines)"
 
@@ -102,7 +99,7 @@ def log_judge_result(judge_logger: logging.Logger, metric_name: str, score: floa
     # Robust fallback: append the same formatted message to the judge_results.log file
     try:
         logs_dir = Path(__file__).parent.parent / "logs"
-        log_path = logs_dir / 'judge_results.log'
+        log_path = logs_dir / "judge_results.log"
         fallback_msg = (
             f"[\n] Judge: {metric_name}\n"
             f"Status: {status}\n"
@@ -110,7 +107,7 @@ def log_judge_result(judge_logger: logging.Logger, metric_name: str, score: floa
             f"Reasoning: {formatted_reason}\n"
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         )
-        with open(log_path, 'a', encoding='utf-8') as f:
+        with open(log_path, "a", encoding="utf-8") as f:
             f.write(fallback_msg)
     except Exception:
         pass
@@ -127,8 +124,7 @@ def log_test_header(logger: logging.Logger, test_name: str, test_type: str = "UN
     logger.info(f"\n{'─' * 70}\n▶️  [{test_type}] {test_name}\n{'─' * 70}")
 
 
-def log_test_result(logger: logging.Logger, test_name: str, passed: bool,
-                   error_msg: str = None):
+def log_test_result(logger: logging.Logger, test_name: str, passed: bool, error_msg: str = None):
     """Log a test result with status.
 
     Args:

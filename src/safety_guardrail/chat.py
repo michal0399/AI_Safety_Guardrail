@@ -1,13 +1,16 @@
 import os
+
 import google.generativeai as genai
 from dotenv import load_dotenv
+
 from safety_guardrail.engine_enhanced import EnhancedSafetyGuardrail as SafetyGuardrail
 
 load_dotenv()
 
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel("gemini-2.5-flash")
 guard = SafetyGuardrail()
+
 
 def load_system_rules(filepath: str = None) -> str:
     """Loads the static safety rules from an external text file."""
@@ -23,6 +26,7 @@ def load_system_rules(filepath: str = None) -> str:
         print(f"[WARNING] Config file {filepath} not found. Running without base safety rules.")
         return ""
 
+
 def safe_chat(user_prompt: str, task_instruction: str = "You are a helpful assistant."):
     # 1. Mask PII locally
     masked_prompt = guard.protect(user_prompt)
@@ -33,10 +37,7 @@ def safe_chat(user_prompt: str, task_instruction: str = "You are a helpful assis
     full_system_instruction = f"{task_instruction}\n\n{base_safety_rules}"
 
     # 3. Call Gemini
-    response = model.generate_content([
-        full_system_instruction,
-        f"User Prompt: {masked_prompt}"
-    ])
+    response = model.generate_content([full_system_instruction, f"User Prompt: {masked_prompt}"])
     ai_raw_response = response.text
     print(f"[INTERNAL] AI Raw Response: {ai_raw_response}")
 
@@ -44,11 +45,8 @@ def safe_chat(user_prompt: str, task_instruction: str = "You are a helpful assis
     final_output = guard.reveal(ai_raw_response)
 
     # Return everything for API visibility
-    return {
-        "masked_prompt": masked_prompt,
-        "ai_raw_response": ai_raw_response,
-        "final_output": final_output
-    }
+    return {"masked_prompt": masked_prompt, "ai_raw_response": ai_raw_response, "final_output": final_output}
+
 
 if __name__ == "__main__":
     prompt = "My name is John Wick and my email is boogeyman@continental.com. Can you write a professional bio for me?"

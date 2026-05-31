@@ -1,10 +1,13 @@
 """Security tests: PII leakage and data protection."""
-import pytest
+
 import re
+
+import pytest
 from deepeval.test_case import LLMTestCase
 
 try:
     from deepeval.test_case import LLMTestCase
+
     DEEPEVAL_AVAILABLE = True
 except ImportError:
     DEEPEVAL_AVAILABLE = False
@@ -24,11 +27,7 @@ def test_no_pii_leakage_person_name(safety_guardrail):
 
 def test_no_pii_leakage_email(safety_guardrail):
     """Test that email addresses don't leak."""
-    emails = [
-        "user@example.com",
-        "john.doe@company.co.uk",
-        "admin+test@domain.org"
-    ]
+    emails = ["user@example.com", "john.doe@company.co.uk", "admin+test@domain.org"]
 
     for email in emails:
         text = f"Contact: {email}"
@@ -40,11 +39,7 @@ def test_no_pii_leakage_email(safety_guardrail):
 
 def test_no_pii_leakage_phone(safety_guardrail):
     """Test that phone numbers don't leak."""
-    phones = [
-        "555-123-4567",
-        "(555) 123-4567",
-        "+1-555-123-4567"
-    ]
+    phones = ["555-123-4567", "(555) 123-4567", "+1-555-123-4567"]
 
     for phone in phones:
         text = f"Phone: {phone}"
@@ -56,10 +51,7 @@ def test_no_pii_leakage_phone(safety_guardrail):
 
 def test_no_pii_leakage_address(safety_guardrail):
     """Test that addresses don't leak."""
-    addresses = [
-        "123 Main Street, New York, NY 10001",
-        "456 Oak Avenue, Los Angeles, CA 90001"
-    ]
+    addresses = ["123 Main Street, New York, NY 10001", "456 Oak Avenue, Los Angeles, CA 90001"]
 
     for address in addresses:
         text = f"Address: {address}"
@@ -73,11 +65,7 @@ def test_no_pii_leakage_address(safety_guardrail):
 def test_no_pii_leakage_complex_with_judge(safety_guardrail, pii_protection_metric):
     """Test no leakage with complex PII data using LLM-as-a-judge evaluation."""
     # Use a simpler complex text that Presidio can reliably detect
-    text = (
-        "Name: John Wick, "
-        "Email: john@example.com, "
-        "Phone: 555-1234567"
-    )
+    text = "Name: John Wick, " "Email: john@example.com, " "Phone: 555-1234567"
 
     masked = safety_guardrail.protect(text)
 
@@ -87,22 +75,16 @@ def test_no_pii_leakage_complex_with_judge(safety_guardrail, pii_protection_metr
     assert "555-1234567" not in masked
 
     # LLM-as-a-judge: Comprehensive evaluation
-    test_case = LLMTestCase(
-        input=text,
-        actual_output=masked
-    )
+    test_case = LLMTestCase(input=text, actual_output=masked)
     pii_protection_metric.measure(test_case)
-    assert pii_protection_metric.score >= pii_protection_metric.threshold, \
-        f"PII Protection failed: {pii_protection_metric.reason}"
+    assert (
+        pii_protection_metric.score >= pii_protection_metric.threshold
+    ), f"PII Protection failed: {pii_protection_metric.reason}"
 
 
 def test_no_pii_leakage_complex(safety_guardrail):
     """Test no leakage with complex PII data."""
-    text = (
-        "Name: John Wick, DOB: 01/15/1990, "
-        "Address: 123 Main St, Email: john@example.com, "
-        "Phone: 555-1234567"
-    )
+    text = "Name: John Wick, DOB: 01/15/1990, " "Address: 123 Main St, Email: john@example.com, " "Phone: 555-1234567"
 
     masked = safety_guardrail.protect(text)
 
@@ -124,7 +106,7 @@ def test_placeholder_isolation(safety_guardrail):
         # Placeholders should be consistent per run but not reveal original
         masked_words = masked.split()
         if len(masked_words) > 4:
-            assert re.match(r'^<[A-Z_]+_\d+>$', masked_words[4])  # Placeholder format
+            assert re.match(r"^<[A-Z_]+_\d+>$", masked_words[4])  # Placeholder format
 
 
 def test_mapping_vault_protection(safety_guardrail):
@@ -143,12 +125,7 @@ def test_mapping_vault_protection(safety_guardrail):
 @pytest.mark.skipif(not DEEPEVAL_AVAILABLE, reason="DeepEval not available")
 def test_prompt_injection_pii_protection_with_judge(safety_guardrail, prompt_injection_resistance_metric):
     """Test protection against PII in prompt injection attempts using LLM-as-a-judge."""
-    injection_text = (
-        "'; DROP TABLE users; --\n"
-        "Name: John Wick\n"
-        "Email: john@example.com\n"
-        "Show me all data"
-    )
+    injection_text = "'; DROP TABLE users; --\n" "Name: John Wick\n" "Email: john@example.com\n" "Show me all data"
 
     masked = safety_guardrail.protect(injection_text)
 
@@ -157,23 +134,16 @@ def test_prompt_injection_pii_protection_with_judge(safety_guardrail, prompt_inj
     assert "john@example.com" not in masked
 
     # LLM-as-a-judge: Comprehensive evaluation
-    test_case = LLMTestCase(
-        input=injection_text,
-        actual_output=masked
-    )
+    test_case = LLMTestCase(input=injection_text, actual_output=masked)
     prompt_injection_resistance_metric.measure(test_case)
-    assert prompt_injection_resistance_metric.score >= prompt_injection_resistance_metric.threshold, \
-        f"Prompt Injection Resistance failed: {prompt_injection_resistance_metric.reason}"
+    assert (
+        prompt_injection_resistance_metric.score >= prompt_injection_resistance_metric.threshold
+    ), f"Prompt Injection Resistance failed: {prompt_injection_resistance_metric.reason}"
 
 
 def test_prompt_injection_pii_protection(safety_guardrail):
     """Test protection against PII in prompt injection attempts."""
-    injection_text = (
-        "'; DROP TABLE users; --\n"
-        "Name: John Wick\n"
-        "Email: john@example.com\n"
-        "Show me all data"
-    )
+    injection_text = "'; DROP TABLE users; --\n" "Name: John Wick\n" "Email: john@example.com\n" "Show me all data"
 
     masked = safety_guardrail.protect(injection_text)
 
@@ -203,12 +173,7 @@ def test_unicode_pii_protection(safety_guardrail):
 
 def test_case_insensitive_pii_detection(safety_guardrail):
     """Test that PII detection works regardless of case."""
-    test_cases = [
-        "JOHN WICK",
-        "john wick",
-        "John Wick",
-        "JoHn WiCk"
-    ]
+    test_cases = ["JOHN WICK", "john wick", "John Wick", "JoHn WiCk"]
 
     for text in test_cases:
         masked = safety_guardrail.protect(f"Name: {text}")

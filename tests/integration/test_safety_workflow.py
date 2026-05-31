@@ -1,5 +1,7 @@
 """Integration tests for the complete PII protection workflow."""
+
 import pytest
+
 
 def test_protect_and_reveal_workflow(safety_guardrail, sample_pii_texts):
     """Test the complete protect -> AI -> reveal workflow."""
@@ -21,6 +23,7 @@ def test_protect_and_reveal_workflow(safety_guardrail, sample_pii_texts):
     # Verify sensitive data is restored
     assert isinstance(final_output, str)
 
+
 def test_workflow_isolation(safety_guardrail, sample_pii_texts):
     """Test that multiple workflows don't interfere with each other."""
     from safety_guardrail.engine import SafetyGuardrail
@@ -40,6 +43,7 @@ def test_workflow_isolation(safety_guardrail, sample_pii_texts):
     # Reveal operations should use their own vaults
     assert guard1.reveal("test") == "test"
     assert guard2.reveal("test") == "test"
+
 
 def test_concurrent_pii_detection(safety_guardrail, sample_pii_texts):
     """Test detecting multiple PII types in single text."""

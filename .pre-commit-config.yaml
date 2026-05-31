@@ -3,21 +3,47 @@ repos:
     rev: v4.6.0
     hooks:
       - id: check-added-large-files
+      - id: check-json
+      - id: check-yaml
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: trailing-whitespace
 
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        language_version: python3.13
+        args: ["--line-length=120"]
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black", "--line-length=120"]
+
   - repo: local
     hooks:
       - id: bandit
-        name: bandit
-        entry: powershell -Command "$env:PYTHONUTF8=1; uv run bandit"
+        name: bandit (security)
+        entry: python -m bandit
         args: ["-l", "-i", "--exclude", "tests/"]
         language: system
         types: [python]
 
-      - id: safety
-        name: safety
-        entry: uv run safety check
+      - id: pytest
+        name: pytest (unit tests)
+        entry: python -m pytest
+        args: ["tests/test_api_keys.py", "-v", "--tb=short"]
         language: system
         pass_filenames: false
+        stages: [commit]
+        types: [python]
+
+      - id: safety
+        name: safety (dependencies)
+        entry: python -m safety
+        args: ["check", "--short-report"]
+        language: system
+        pass_filenames: false
+        stages: [commit]

@@ -1,6 +1,9 @@
 """Performance tests: Speed and efficiency."""
-import pytest
+
 import time
+
+import pytest
+
 
 def test_masking_latency_simple(safety_guardrail):
     """Test masking latency for simple text."""
@@ -12,6 +15,7 @@ def test_masking_latency_simple(safety_guardrail):
 
     # Should complete in under 1 second for simple text
     assert elapsed < 1.0, f"Masking took {elapsed}s (expected < 1s)"
+
 
 def test_masking_latency_complex(safety_guardrail):
     """Test masking latency for complex text with multiple PII types."""
@@ -29,6 +33,7 @@ def test_masking_latency_complex(safety_guardrail):
     # Should complete in reasonable time
     assert elapsed < 5.0, f"Masking took {elapsed}s (expected < 5s)"
 
+
 def test_reveal_latency(safety_guardrail):
     """Test reveal operation latency."""
     text = "John john@example.com"
@@ -41,13 +46,14 @@ def test_reveal_latency(safety_guardrail):
     # Reveal should be fast
     assert elapsed < 0.5, f"Reveal took {elapsed}s (expected < 0.5s)"
 
+
 def test_large_text_handling(safety_guardrail):
     """Test handling of large texts."""
     # Create a large text with PII scattered throughout
     large_text = (
-        "This is a large document. " * 100 +
-        "Contact John Wick at john@example.com for more info. " +
-        "Additional content here. " * 100
+        "This is a large document. " * 100
+        + "Contact John Wick at john@example.com for more info. "
+        + "Additional content here. " * 100
     )
 
     start = time.time()
@@ -57,6 +63,7 @@ def test_large_text_handling(safety_guardrail):
     # Should handle large text reasonably
     assert elapsed < 10.0, f"Large text masking took {elapsed}s"
     assert isinstance(masked, str)
+
 
 def test_many_pii_entities(safety_guardrail):
     """Test performance with many PII entities."""
@@ -75,13 +82,10 @@ def test_many_pii_entities(safety_guardrail):
     assert elapsed < 15.0, f"Many entities masking took {elapsed}s"
     assert isinstance(masked, str)
 
+
 def test_sequential_operations_latency(safety_guardrail):
     """Test latency of sequential protect/reveal operations."""
-    texts = [
-        "John john@example.com",
-        "Jane jane@example.com",
-        "Bob bob@example.com"
-    ]
+    texts = ["John john@example.com", "Jane jane@example.com", "Bob bob@example.com"]
 
     start = time.time()
     for text in texts:
@@ -92,6 +96,7 @@ def test_sequential_operations_latency(safety_guardrail):
     # Should handle multiple operations efficiently
     assert elapsed < 5.0, f"Sequential ops took {elapsed}s"
 
+
 def test_mapping_vault_size_efficiency(safety_guardrail):
     """Test that mapping vault doesn't grow unexpectedly."""
     text = "Name Name Name Name Name"
@@ -101,6 +106,7 @@ def test_mapping_vault_size_efficiency(safety_guardrail):
 
     # Vault should be reasonable size
     assert vault_size < 1000, f"Vault too large: {vault_size}"
+
 
 @pytest.mark.parametrize("repeat_count", [1, 10, 100])
 def test_throughput(safety_guardrail, repeat_count):

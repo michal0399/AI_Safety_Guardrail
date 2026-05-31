@@ -1,6 +1,9 @@
 """API performance and latency tests."""
-import pytest
+
 import time
+
+import pytest
+
 
 def test_api_response_time():
     """Test API endpoint response time."""
@@ -8,11 +11,13 @@ def test_api_response_time():
     # Placeholder for future integration
     pass
 
+
 def test_api_concurrent_requests():
     """Test API handling of concurrent requests."""
     # This would test concurrent request handling
     # Placeholder for future integration
     pass
+
 
 def test_api_throughput():
     """Test API throughput (requests per second)."""

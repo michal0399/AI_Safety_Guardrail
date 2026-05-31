@@ -6,7 +6,8 @@ where many cases can be evaluated together.
 """
 
 import json
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple
+
 from deepeval.test_case import LLMTestCase
 
 
@@ -30,11 +31,7 @@ class JudgeBatchProcessor:
             test_id: Unique identifier for the test
             test_case: LLMTestCase to evaluate
         """
-        self.pending_cases.append({
-            'test_id': test_id,
-            'test_case': test_case,
-            'index': len(self.pending_cases)
-        })
+        self.pending_cases.append({"test_id": test_id, "test_case": test_case, "index": len(self.pending_cases)})
 
     def is_ready(self) -> bool:
         """Check if batch is ready to process."""
@@ -44,8 +41,7 @@ class JudgeBatchProcessor:
         """Get number of pending cases."""
         return len(self.pending_cases)
 
-    def create_batch_prompt(self, metric_name: str, criteria: str,
-                           evaluation_steps: List[str]) -> str:
+    def create_batch_prompt(self, metric_name: str, criteria: str, evaluation_steps: List[str]) -> str:
         """Create a batch prompt for evaluating multiple cases.
 
         Args:
@@ -58,13 +54,15 @@ class JudgeBatchProcessor:
         """
         cases = []
         for item in self.pending_cases:
-            test_case = item['test_case']
-            cases.append({
-                'index': item['index'],
-                'test_id': item['test_id'],
-                'input': test_case.input,
-                'actual_output': test_case.actual_output
-            })
+            test_case = item["test_case"]
+            cases.append(
+                {
+                    "index": item["index"],
+                    "test_id": item["test_id"],
+                    "input": test_case.input,
+                    "actual_output": test_case.actual_output,
+                }
+            )
 
         batch_prompt = f"""
 Metric: {metric_name}
@@ -105,8 +103,8 @@ Ensure:
         try:
             # Extract JSON from response (may be wrapped in text)
             json_match = None
-            start_idx = response_text.find('[')
-            end_idx = response_text.rfind(']') + 1
+            start_idx = response_text.find("[")
+            end_idx = response_text.rfind("]") + 1
 
             if start_idx >= 0 and end_idx > start_idx:
                 json_str = response_text[start_idx:end_idx]
@@ -114,20 +112,17 @@ Ensure:
 
                 # Map to test_id
                 for result in results_array:
-                    test_id = result.get('test_id')
+                    test_id = result.get("test_id")
                     if test_id:
                         self.results[test_id] = {
-                            'score': float(result.get('score', 0.5)),
-                            'reasoning': str(result.get('reasoning', 'No reasoning provided'))
+                            "score": float(result.get("score", 0.5)),
+                            "reasoning": str(result.get("reasoning", "No reasoning provided")),
                         }
         except (json.JSONDecodeError, ValueError) as e:
             print(f"Error parsing batch response: {e}")
             # Fallback: mark all as failed
             for item in self.pending_cases:
-                self.results[item['test_id']] = {
-                    'score': 0.0,
-                    'reasoning': f"Failed to parse judge response: {str(e)}"
-                }
+                self.results[item["test_id"]] = {"score": 0.0, "reasoning": f"Failed to parse judge response: {str(e)}"}
 
         return self.results
 
@@ -142,7 +137,7 @@ Ensure:
         """
         if test_id in self.results:
             result = self.results[test_id]
-            return (result['score'], result['reasoning'])
+            return (result["score"], result["reasoning"])
         return (0.5, "Result not yet available")
 
     def flush(self) -> List[Dict[str, Any]]:
@@ -174,8 +169,9 @@ class BatchEvaluator:
         self.judge = judge
         self.processor = JudgeBatchProcessor(batch_size)
 
-    def evaluate_batch(self, metric_name: str, criteria: str,
-                      evaluation_steps: List[str], test_cases: Dict[str, LLMTestCase]) -> Dict[str, Tuple[float, str]]:
+    def evaluate_batch(
+        self, metric_name: str, criteria: str, evaluation_steps: List[str], test_cases: Dict[str, LLMTestCase]
+    ) -> Dict[str, Tuple[float, str]]:
         """Evaluate a batch of test cases.
 
         Args:
